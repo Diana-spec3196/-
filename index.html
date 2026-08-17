@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чек-листы родового отделения</title>
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --card-bg:#ffffff;
+    --border:#dbe2e8;
+    --accent:#2f6690;
+    --accent-light:#eaf2f8;
+    --text:#1f2d3a;
+    --muted:#6b7a89;
+    --sidebar-bg:#1f3a52;
+    --sidebar-bg-active:#2f6690;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+  .sidebar{
+    width:220px;
+    flex-shrink:0;
+    background:var(--sidebar-bg);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    padding:20px 14px;
+  }
+  .sidebar h1{
+    font-size:16px;
+    font-weight:600;
+    margin:0 0 18px 4px;
+    color:#dfe9f0;
+  }
+  #boxNav{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex:1;
+  }
+  .box-btn{
+    text-align:left;
+    background:transparent;
+    border:none;
+    color:#cfdce6;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .box-btn:hover{
+    background:rgba(255,255,255,0.08);
+  }
+  .box-btn.active{
+    background:var(--sidebar-bg-active);
+    color:#fff;
+    font-weight:600;
+  }
+  .sidebar-footer{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px solid rgba(255,255,255,0.15);
+  }
+  .sidebar-footer button{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.2);
+    color:#fff;
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .sidebar-footer button:hover{
+    background:rgba(255,255,255,0.16);
+  }
+  #resetBtn{
+    border-color:rgba(255,120,120,0.4);
+    color:#ffd7d7;
+  }
+  .content{
+    flex:1;
+    padding:24px 32px 60px;
+    max-width:980px;
+  }
+  .box-header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .box-header h2{
+    margin:0;
+    font-size:22px;
+  }
+  .save-status{
+    font-size:13px;
+    color:var(--muted);
+  }
+  .checklist{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .form-row{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .field-group{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width:140px;
+  }
+  .field-group.grow{
+    flex:1;
+    min-width:220px;
+  }
+  .field-group label{
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.02em;
+  }
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"]{
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-size:14px;
+    background:#fff;
+    color:var(--text);
+    min-width:0;
+  }
+  input:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  .date-with-btn{
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .mini-btn{
+    border:1px solid var(--border);
+    background:var(--accent-light);
+    color:var(--accent);
+    border-radius:6px;
+    padding:7px 10px;
+    font-size:12px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .mini-btn:hover{
+    background:#dcebf5;
+  }
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px 18px;
+  }
+  .card h3{
+    margin:0 0 12px;
+    font-size:14px;
+    color:var(--accent);
+    text-transform:uppercase;
+    letter-spacing:.02em;
+  }
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .checkbox-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:14px;
+    margin-bottom:10px;
+  }
+  .checkbox-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+    gap:10px 16px;
+    margin-bottom:10px;
+  }
+  .chk{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:14px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .chk input{
+    width:16px;
+    height:16px;
+    accent-color:var(--accent);
+    cursor:pointer;
+  }
+  .inline-note{
+    font-size:13px;
+    color:var(--muted);
+  }
+  .inline-label{
+    font-size:14px;
+  }
+  .hint{
+    margin:0 0 10px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .dilation-table-wrap{
+    overflow-x:auto;
+  }
+  table.dilation-table{
+    border-collapse:collapse;
+    width:100%;
+    margin-top:10px;
+  }
+  table.dilation-table th,
+  table.dilation-table td{
+    border:1px solid var(--border);
+    padding:6px;
+    text-align:center;
+    font-size:13px;
+  }
+  table.dilation-table th{
+    background:var(--accent-light);
+    color:var(--accent);
+    font-weight:600;
+  }
+  table.dilation-table input[type="time"]{
+    width:90px;
+    padding:5px 4px;
+    text-align:center;
+  }
+  .signatures{
+    margin-top:4px;
+  }
+  @media (max-width: 800px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;padding:12px;}
+    #boxNav{flex-direction:row;flex-wrap:wrap;}
+    .sidebar-footer{flex-direction:row;margin-top:0;border-top:none;}
+    .two-col{grid-template-columns:1fr;}
+    .content{padding:16px;}
+  }
+  @media print{
+    .sidebar{display:none;}
+    .content{max-width:100%;padding:0;}
+    .save-status{display:none;}
+    body{background:#fff;}
+    .card{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1>Родовое отделение</h1>
+      <nav id="boxNav"></nav>
+      <div class="sidebar-footer">
+        <button type="button" id="printBtn">🖨 Печать</button>
+        <button type="button" id="resetBtn">Очистить бокс</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="box-header">
+        <h2 id="boxTitle">Бокс 1</h2>
+        <span class="save-status" id="saveStatus">Сохранено</span>
+      </div>
+
+      <form id="checklistForm" class="checklist" autocomplete="off">
+
+        <div class="form-row">
+          <div class="field-group">
+            <label>Дата</label>
+            <div class="date-with-btn">
+              <input type="date" data-field="date">
+              <button type="button" id="todayBtn" class="mini-btn">Сегодня</button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Время поступления</label>
+            <input type="time" data-field="admissionTime">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group grow">
+            <label>ФИО пациентки</label>
+            <input type="text" data-field="fio" placeholder="Фамилия Имя Отчество">
+          </div>
+          <div class="field-group">
+            <label>Возраст</label>
+            <input type="number" min="0" max="60" data-field="age">
+          </div>
+          <div class="field-group">
+            <label>№ истории родов</label>
+            <input type="text" data-field="historyNo">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label>Беременность (по счёту)</label>
+            <input type="text" data-field="pregnancyNum">
+          </div>
+          <div class="field-group">
+            <label>Роды (по счёту)</label>
+            <input type="text" data-field="birthNum">
+          </div>
+          <div class="field-group">
+            <label>Срок беременности (нед.)</label>
+            <input type="text" data-field="gestWeeks">
+          </div>
+        </div>
+
+        <div class="two-col">
+          <section class="card">
+            <h3>Аллергическая реакция</h3>
+            <div class="checkbox-row">
+              <label class="chk"><input type="checkbox" data-field="allergyNo"> Нет</label>
+              <label class="chk"><input type="checkbox" data-field="allergyYes"> Да</label>
+            </div>
+            <div class="field-group">
+              <label>На что</label>
+              <input type="text" data-field="allergyWhat">
+            </div>
+          </section>
+
+          <section class="card">
+            <h3>Резус-фактор</h3>
+            <div class="checkbox-row">
+              <label class="chk"><input type="checkbox" data-field="rhPos"> Rh +</label>
+              <label class="chk"><input type="checkbox" data-field="rhNeg"> Rh −</label>
+              <label class="chk"><input type="checkbox" data-field="rhAntibodies"> Антитела</label>
+            </div>
+          </section>
+        </div>
+
+        <section class="card">
+          <h3>Инфекционный статус</h3>
+          <div class="checkbox-row">
+            <label class="chk"><input type="checkbox" data-field="infHiv"> ВИЧ</label>
+            <label class="chk"><input type="checkbox" data-field="infHepatitis"> Гепатит B/C</label>
+            <label class="chk"><input type="checkbox" data-field="infRw"> RW (сифилис)</label>
+            <span class="inline-note">все отрицательные</span>
+            <label class="chk"><input type="checkbox" data-field="infAllNeg"> Да</label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Факторы риска и осложнения родов</h3>
+          <div class="checkbox-grid">
+            <label class="chk"><input type="checkbox" data-field="riskBreech"> Тазовое предлежание</label>
+            <label class="chk"><input type="checkbox" data-field="riskScar"> Рубец на матке</label>
+            <label class="chk"><input type="checkbox" data-field="riskLargeFetus"> Крупный плод</label>
+            <label class="chk"><input type="checkbox" data-field="riskIugr"> ЗРП (задержка роста плода)</label>
+            <label class="chk"><input type="checkbox" data-field="riskPreeclampsia"> Преэклампсия</label>
+            <label class="chk"><input type="checkbox" data-field="riskBleeding"> Высокий риск кровотечения</label>
+          </div>
+          <div class="field-group">
+            <label>Другое</label>
+            <input type="text" data-field="riskOther">
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Перинатальные риски</h3>
+          <div class="checkbox-grid">
+            <label class="chk"><input type="checkbox" data-field="perinVpr"> ВПР плода</label>
+            <label class="chk"><input type="checkbox" data-field="perinWater"> Маловодие / многоводие</label>
+            <label class="chk"><input type="checkbox" data-field="perinPreterm"> Недоношенность</label>
+            <label class="chk"><input type="checkbox" data-field="perinPlacenta"> Патология плаценты / пуповины</label>
+            <label class="chk"><input type="checkbox" data-field="perinMultiple"> Многоплодная беременность</label>
+          </div>
+          <div class="field-group">
+            <label>Другое</label>
+            <input type="text" data-field="perinOther">
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Стрептококк группы B (GBS)</h3>
+          <div class="checkbox-row">
+            <label class="chk"><input type="checkbox" data-field="gbsNeg"> Отрицательный</label>
+            <label class="chk"><input type="checkbox" data-field="gbsPos"> Положительный</label>
+            <label class="chk"><input type="checkbox" data-field="gbsRapid"> Экспресс-тест в ПО</label>
+            <label class="chk"><input type="checkbox" data-field="gbsNotTested"> Не обследована</label>
+          </div>
+          <div class="form-row">
+            <div class="field-group grow">
+              <label>АБ (антибиотик)</label>
+              <input type="text" data-field="gbsAb">
+            </div>
+            <div class="field-group">
+              <label>Время</label>
+              <input type="time" data-field="gbsAbTime">
+            </div>
+            <div class="field-group">
+              <label>Повтор</label>
+              <input type="time" data-field="gbsAbRepeat">
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Преждевременный разрыв плодных оболочек (ПРПО)</h3>
+          <div class="checkbox-row">
+            <label class="chk"><input type="checkbox" data-field="promClear"> светлые</label>
+            <label class="chk"><input type="checkbox" data-field="promMeconium"> меконеальные</label>
+          </div>
+          <div class="checkbox-row">
+            <span class="inline-label"><strong>Тактика:</strong></span>
+            <label class="chk"><input type="checkbox" data-field="promExpectant"> Выжидательная</label>
+            <label class="chk"><input type="checkbox" data-field="promActive"> Активная</label>
+          </div>
+          <div class="field-group">
+            <label>Окситоцин в</label>
+            <input type="time" data-field="promOxytocinTime">
+          </div>
+        </section>
+
+        <div class="two-col">
+          <section class="card">
+            <h3>Преиндукция родов</h3>
+            <div class="checkbox-grid">
+              <label class="chk"><input type="checkbox" data-field="induNone"> Не проводилась</label>
+              <label class="chk"><input type="checkbox" data-field="induFoley"> Катетер Фолея</label>
+              <label class="chk"><input type="checkbox" data-field="induMife"> Мифепристон</label>
+            </div>
+            <div class="form-row">
+              <div class="field-group">
+                <label>Начата</label>
+                <input type="time" data-field="induStart">
+              </div>
+              <div class="field-group">
+                <label>Окончена</label>
+                <input type="time" data-field="induEnd">
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3>Амниотомия</h3>
+            <div class="checkbox-row">
+              <label class="chk"><input type="checkbox" data-field="amnioNo"> Нет</label>
+              <label class="chk"><input type="checkbox" data-field="amnioYes"> Да</label>
+            </div>
+            <div class="field-group">
+              <label>Время</label>
+              <input type="time" data-field="amnioTime">
+            </div>
+          </section>
+        </div>
+
+        <section class="card">
+          <h3>Раскрытие маточного зева</h3>
+          <p class="hint">Впишите время (чч:мм) достижения каждого раскрытия</p>
+          <div class="field-group">
+            <label>Начало регулярной родовой деятельности</label>
+            <input type="time" data-field="laborStart">
+          </div>
+          <div class="dilation-table-wrap">
+            <table class="dilation-table">
+              <thead>
+                <tr id="dilationHeadRow"><th>Раскрытие, см</th></tr>
+              </thead>
+              <tbody>
+                <tr id="dilationTimeRow"><td>Время</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="two-col signatures">
+          <div class="field-group">
+            <label>Врач акушер-гинеколог (ФИО)</label>
+            <input type="text" data-field="doctorName">
+          </div>
+          <div class="field-group">
+            <label>Акушерка (ФИО)</label>
+            <input type="text" data-field="midwifeName">
+          </div>
+        </div>
+
+      </form>
+    </main>
+  </div>
+
+<script>
+(function(){
+  const TOTAL_BOXES = 8;
+  const STORAGE_PREFIX = 'roddom_checklist_box_';
+  let currentBox = 1;
+  let saveTimeout = null;
+
+  // Build dilation table columns 1..10
+  const headRow = document.getElementById('dilationHeadRow');
+  const timeRow = document.getElementById('dilationTimeRow');
+  for(let cm = 1; cm <= 10; cm++){
+    const th = document.createElement('th');
+    th.textContent = cm;
+    headRow.appendChild(th);
+
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'time';
+    input.dataset.field = 'dilation' + cm;
+    td.appendChild(input);
+    timeRow.appendChild(td);
+  }
+
+  function getFields(){
+    return document.querySelectorAll('#checklistForm [data-field]');
+  }
+
+  function serializeForm(){
+    const data = {};
+    getFields().forEach(el => {
+      const key = el.dataset.field;
+      data[key] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    return data;
+  }
+
+  function populateForm(data){
+    getFields().forEach(el => {
+      const key = el.dataset.field;
+      const val = data ? data[key] : undefined;
+      if(el.type === 'checkbox'){
+        el.checked = !!val;
+      } else {
+        el.value = val || '';
+      }
+    });
+  }
+
+  function setSaveStatus(text){
+    document.getElementById('saveStatus').textContent = text;
+  }
+
+  function saveBox(){
+    const data = serializeForm();
+    localStorage.setItem(STORAGE_PREFIX + currentBox, JSON.stringify(data));
+    setSaveStatus('Сохранено');
+  }
+
+  function scheduleSave(){
+    setSaveStatus('Сохранение…');
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveBox, 300);
+  }
+
+  function updateNavActive(){
+    document.querySelectorAll('.box-btn').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.box) === currentBox);
+    });
+  }
+
+  function loadBox(n){
+    currentBox = n;
+    const raw = localStorage.getItem(STORAGE_PREFIX + n);
+    const data = raw ? JSON.parse(raw) : null;
+    populateForm(data);
+    document.getElementById('boxTitle').textContent = 'Бокс ' + n;
+    updateNavActive();
+    setSaveStatus('Сохранено');
+  }
+
+  // Build sidebar nav
+  const nav = document.getElementById('boxNav');
+  for(let i = 1; i <= TOTAL_BOXES; i++){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'box-btn';
+    btn.dataset.box = i;
+    btn.textContent = 'Бокс ' + i;
+    btn.addEventListener('click', () => loadBox(i));
+    nav.appendChild(btn);
+  }
+
+  document.getElementById('checklistForm').addEventListener('input', scheduleSave);
+  document.getElementById('checklistForm').addEventListener('change', scheduleSave);
+
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    const dateInput = document.querySelector('[data-field="date"]');
+    const today = new Date();
+    const iso = today.toISOString().slice(0,10);
+    dateInput.value = iso;
+    scheduleSave();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('Очистить все данные чек-листа для Бокса ' + currentBox + '? Это действие необратимо.')){
+      localStorage.removeItem(STORAGE_PREFIX + currentBox);
+      populateForm(null);
+      setSaveStatus('Сохранено');
+    }
+  });
+
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  loadBox(1);
+})();
+</script>
+</body>
+</html>
